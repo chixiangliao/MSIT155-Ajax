@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Spots";
+}
+
+<h1>Spots</h1>
+
+<div id="myCardGp" class="row row-cols-1 row-cols-md-3 g-4">
+</div>
+
+@section Scripts {
+    <script src="~/js/travel.js"></script>
+    <script>
+
+        const myCardGp = document.getElementById('myCardGp');
+
+        const dataArray = spots.CommonFormat.Section;
+
+        const htmlElement = dataArray.map(data => {
+
+            let description = "";
+            let img = "";
+            let isImgIsArray = Array.isArray(data.file.img);
+            if (isImgIsArray) {
+                description = data.file.img[0]["@@description"];
+                img = data.file.img[0].text
+            }
+            else {
+                description = data.file.img["@@description"];
+                img = data.file.img.text
+            }
+            let body = data.xbody;
+            let bodyFormat = body.substr(0, 100);
+
+            return `<div class="col">
+                              <div class="card h-100" style="border-radius: 15px" >
+                                  <img src="${img}" class="card-img-top " alt="..." style="border-radius: 15px 15px 0 0 ">
+                             <div class="card-body">
+                                 <h5 class="card-title">${description}</h5>
+                                    <p class="card-text">${bodyFormat}</p>
+                             </div>
+                      <div class="card-footer">
+                        <small class="text-muted">${data.address}</small>
+                      </div>
+                     </div>
+                   </div>`
+        })
+
+        myCardGp.innerHTML = htmlElement.join("");
+
+    </script>
+}
