@@ -1,0 +1,129 @@
+﻿@{
+    ViewData["Title"] = "Spots";
+}
+
+<h1 class="mb-3">台北市景點</h1>
+<div class="col-12 mb-3 row">
+    <div class=" col-3">
+        <select class="form-select" id="selet1">
+            <option value="9">每頁9筆資料</option>
+            <option value="18">每頁18筆資料</option>
+            <option value="27">每頁27筆資料</option>
+        </select>
+    </div>
+    <div class="btn-toolbar mb-3 col-3" role="toolbar" aria-label="Toolbar with button groups">
+        <div class="btn-group " role="group" aria-label="First group" id="page">
+        </div>
+    </div>
+    <div class=" col-3">
+        <select class="form-select" id="selet2">
+            <option value="0">--請選擇--</option>
+            <option value="asc,spotId">景點編號升冪</option>
+            <option value="desc,spotId">景點編號降冪</option>
+        </select>
+    </div>
+    <div class=" col-3">
+        <input id="inputSpots" class="form-control" placeholder="景點搜尋" />
+      
+    </div>
+</div>
+
+<div id="myCardGp" class="row row-cols-1 row-cols-md-3 g-4">
+</div>
+
+@section Scripts {
+
+    <script>
+
+        const myCardGp = document.querySelector("#myCardGp");
+        const page = document.querySelector("#page");
+        const selet1 = document.querySelector("#selet1");
+        const selet2 = document.querySelector("#selet2");
+        const inputSpots = document.querySelector("#inputSpots");
+
+
+        const search = {
+            "categoryId": 0,
+            "keyword": "北投",
+            "page": 1,
+            "pageSize": 9,
+            "sortType": "asc",
+            "sortBy": ""
+        }
+        const loadSpots = async () => {
+            const res = await fetch("@Url.Content("~/api/spots")", {
+                'method': 'POST',
+                'body': JSON.stringify(search),
+                'headers': {
+                    "content-type": "application/json"
+                }
+            });
+            const datas = await res.json();
+
+            const divSpots = datas.spotsResult.map(data => {
+                const { spotId, spotTitle, spotImage, address, spotDescription } = data;
+                return (`
+                                           <div class="col">
+                                                <div class="card h-100">
+                                                        <img src="${spotImage}" class="card-img-top" alt="${spotTitle}">
+                                                        <div class="card-body">
+                                                            <h5 class="card-title">${spotId}-${spotTitle}</h5>
+                                                            <p class="card-text">${spotDescription.length <= 100 ? spotDescription : spotDescription.substring(0, 100)}</p>
+                                                        </div>
+                                                        <div class="card-footer">
+                                                            <small class="text-body-secondary">${address}</small>
+                                                        </div>
+                                               </div>
+                                          </div>
+                                `)
+            })
+            myCardGp.innerHTML = divSpots.join("");
+
+            let pageCount = "";
+            for (let i = 1; i <= datas.totalPages; i++) {
+                pageCount += `<button type="button" class="btn btn-outline-secondary" onClick="pagingHandler(${i})">${i}</button>`
+            }
+
+            page.innerHTML = pageCount;
+
+        }
+
+        //呈現幾筆資料事件
+        selet1.addEventListener("change", (e) => {
+            //console.log(e.target.value);
+            search.pageSize = e.target.value;
+            search.page = 1;
+            loadSpots();
+        })
+
+        //排列方式
+        selet2.addEventListener("change", (e) => {
+            //console.log(e.target.value);
+            if (e.target.value != "0") {
+                const value = e.target.value.split(",");
+                search.sortType = value[0];
+                search.sortBy = value[1]
+                search.page = 1;
+
+                loadSpots();
+            }
+        })
+
+        inputSpots.addEventListener("keydown", (e) => {
+            if (e.which == 13) {
+                search.keyword = e.target.value;
+                search.page = 1;
+
+                loadSpots();
+            }
+        })
+
+
+        function pagingHandler(page) {
+            search.page = page;
+            loadSpots();
+        }
+        loadSpots();
+
+    </script>
+}
